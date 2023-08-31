@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>PAFU PAFU MEOW Meow</title>
+    <style>
+      body {
+        background-color: black;
+        color: white;
+        font-family: "Courier New", Courier, monospace;
+      }
+      #gameCanvasControl {
+     text-align: center;
+      }
+      #gameCanvas {
+        border: 1px solid white;
+        width:90vw;;
+      }
+      .button {
+        background-color: white;
+        background-color: transparent;
+        border: 0px solid transparent;
+        color: black;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        cursor: pointer;
+      }
+      .catImage {
+        width: 300px;
+    width: 22vw;
+        opacity: 0.85;
+      }
+      .mainCharacter {
+        display: flex;
+        justify-content: left;
+        flex-direction: row;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>PAFU PAFU MEOW Meow</h1>
+    <div id="menuPage">
+      <h2>Menu Page</h2>
+      <p>Choose your cat:</p>
+      <div class="mainCharacter">
+
+        <button class="button" onclick="chooseCat('brown')">
+          <img
+            class="catImage"
+            src="https://raw.githubusercontent.com/dragonjump/image/main/brown.png"
+            alt="Brown Cat"
+          />
+        </button>
+        <button class="button" onclick="chooseCat('black')">
+          <img
+            class="catImage"
+            src="https://raw.githubusercontent.com/dragonjump/image/main/black.png"
+            alt="Black Cat"
+          />
+        </button>
+        <button class="button" onclick="chooseCat('red')">
+          <img
+            class="catImage"
+            src="https://raw.githubusercontent.com/dragonjump/image/main/red.png"
+            alt="Red Cat"
+          />
+      </div>
+      </button>
+    </div>
+    <div id="mainPage" style="display: none">
+      <h2>Main Page</h2>
+      <p>
+        Use the left and right arrow keys to move the cat. Press the spacebar to
+        shoot fishbones.
+      </p>
+      <span>Score: </span><span id="score">0</span><br />
+      <canvas id="gameCanvas" width="600" height="400"></canvas><br />
+      <h2 id="gameCanvasControl">
+        <span id="shoot">  🔫 </span> &nbsp; 
+        <span id="arrowLeft">⬅️ </span>   
+
+        <span id="arrowRight"> ➡️ </span> 
+
+          <br /><br />
+      </h2> 
+    </div>
+    <div id="gameOverPage" style="display: none">
+      <h2>Game Over</h2>
+      <p>Your final score is: <span id="finalScore">0</span></p>
+      <p>Game Over, meow meow pafu pafu pafu pafu pafu</p>
+      <img id="catImage" class="catImage" style="display: none;" width="0" alt="" />
+      <button class="button" onclick="location.href=location.href+'?a'">
+        <img
+          class="catImage"
+          src="https://raw.githubusercontent.com/dragonjump/image/main/cry.jpeg"
+          alt="Red Cat"
+        />
+      </button>
+    </div>
+
+    <script>
+    
+      const audioContext = new AudioContext();
+      const gainNode = audioContext.createGain();
+      gainNode.connect(audioContext.destination);
+
+      let notes = [
+        "C4",
+        "D4",
+        "E4",
+        "F4",
+        "G4",
+        "A4",
+        "B4",
+        "C5",
+        "D5",
+        "E5",
+        "F5",
+        "G5",
+        "A5",
+        "B5",
+        "C6",
+      ];
+
+      const noteLength = 0.2;
+
+      function playMelody() {
+        notes.forEach((note, index) => {
+          const oscillator = audioContext.createOscillator();
+          oscillator.type = "square";
+          oscillator.frequency.value =
+            440 * Math.pow(2, (notes.indexOf(note) - 9) / 12);
+          oscillator.connect(gainNode);
+          oscillator.start(audioContext.currentTime + index * noteLength);
+          oscillator.stop(audioContext.currentTime + (index + 1) * noteLength);
+        });
+
+        gainNode.gain.setValueAtTime(
+          0,
+          audioContext.currentTime + notes.length * noteLength
+        );
+      }
+      function playEffect() {
+        window.AudioContext = window.AudioContext || window.webkitAudioContext;
+        var ctx = new AudioContext();
+        var o = ctx.createOscillator();
+        o.type = "square";
+        o.frequency.value = 161.63;
+        g = ctx.createGain();
+        g.gain.value = 1;
+        o.start(0);
+        o.connect(ctx.destination);
+        setTimeout(() => {
+          o.stop(0);
+        }, 100);
+      }
+      setInterval(playMelody, notes.length * noteLength * 1000);
+    </script>
+    <script>
+      let catColor = "brown";
+      let catImage = "";
+      let score = 0;
+      let shapes = [];
+      let lasers = [];
+      let catX = 300;
+      let gameOver = false;
+      let invincible = false;
+
+      const canvas = document.getElementById("gameCanvas");
+      const ctx = canvas.getContext("2d");
+
+      const catImg = new Image();
+     
+      function chooseCat(color) {
+        catColor = color;
+        if (color === "brown") {
+          catImage =
+            "https://raw.githubusercontent.com/dragonjump/image/main/brown.png";
+        } else if (color === "black") {
+          catImage =
+            "https://raw.githubusercontent.com/dragonjump/image/main/black.png";
+        } else if (color === "red") {
+          catImage =
+            "https://raw.githubusercontent.com/dragonjump/image/main/red.png";
+        }
+
+        catImg.src = catImage;
+
+        document.getElementById("menuPage").style.display = "none";
+        document.getElementById("mainPage").style.display = "block";
+        requestAnimationFrame(update);
+      }
+
+      function update() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // draw cat
+        ctx.drawImage(catImg, catX - 20, 360, 40, 40);
+
+        // draw shapes
+        shapes.forEach((shape) => {
+          shape.y += shape.speed;
+          ctx.beginPath();
+          ctx.fillStyle = shape.color;
+          if (shape.type === "square") {
+            ctx.fillRect(shape.x - 10, shape.y - 10, 20, 20);
+          } else if (shape.type === "circle") {
+            ctx.arc(shape.x, shape.y, 10, 0, Math.PI * 2);
+            ctx.fill();
+          } else if (shape.type === "triangle") {
+            ctx.moveTo(shape.x, shape.y - 10);
+            ctx.lineTo(shape.x - 10, shape.y + 10);
+            ctx.lineTo(shape.x + 10, shape.y + 10);
+            ctx.fill();
+          } else if (shape.type === "star") {
+            ctx.beginPath();
+            ctx.fillStyle = "yellow";
+            for (let i = 0; i < 5; i++) {
+              ctx.lineTo(
+                Math.cos(((18 + i * 72) / 180) * Math.PI) * 9 + shape.x,
+                -Math.sin(((18 + i * 72) / 180) * Math.PI) * 9 + shape.y
+              );
+              ctx.lineTo(
+                Math.cos(((54 + i * 72) / 180) * Math.PI) * 4 + shape.x,
+                -Math.sin(((54 + i * 72) / 180) * Math.PI) * 4 + shape.y
+              );
+            }
+            ctx.closePath();
+            ctx.fill();
+          }
+          ctx.closePath();
+
+
+          document.getElementById('gameCanvas').style.opacity=.95          // check collision with cat
+          if (shape.y > 360 && Math.abs(shape.x - catX) < 30) {
+            if (shape.type === "star") {
+              invincible = true;
+              document.getElementById('gameCanvas').style.opacity=.6
+              setTimeout(() => {
+                
+              document.getElementById('gameCanvas').style.opacity=.95
+              (invincible = false)
+              }, 3000);
+            } else if (!invincible) {
+              gameOver = true;
+            }
+          }
+        });
+
+        // draw lasers
+        lasers.forEach((laser) => {
+          laser.y -= laser.speed;
+          ctx.beginPath();
+          ctx.strokeStyle = "white";
+          ctx.moveTo(laser.x, laser.y);
+          ctx.lineTo(laser.x, laser.y - 10);
+          ctx.stroke();
+          ctx.closePath();
+
+          // check collision with shapes
+          shapes.forEach((shape, index) => {
+            if (
+              laser.y - 10 <= shape.y + 10 &&
+              Math.abs(laser.x - shape.x) < 20
+            ) {
+              shapes.splice(index, 1);
+              score++;
+              document.getElementById("score").textContent = score;
+            }
+          });
+        });
+
+        // remove off-screen shapes and lasers
+        shapes = shapes.filter((shape) => shape.y <= canvas.height);
+        lasers = lasers.filter((laser) => laser.y >= 0);
+
+        // randomly generate new shapes
+        if (Math.random() < 0.05) {
+          const shapeTypes = ["square", "circle", "triangle", "star"];
+          const shapeColors = ["red", "green", "blue", "yellow"];
+          shapes.push({
+            type: shapeTypes[Math.floor(Math.random() * shapeTypes.length)],
+            color: shapeColors[Math.floor(Math.random() * shapeColors.length)],
+            x: Math.random() * canvas.width,
+            y: 0,
+            speed: Math.random() * 3 + 1,
+          });
+        }
+
+        if (!gameOver) {
+          requestAnimationFrame(update);
+        } else {
+          document.getElementById("mainPage").style.display = "none";
+          document.getElementById("finalScore").textContent = score;
+          document.getElementById("catImage").src = catImage;
+          document.getElementById("gameOverPage").style.display = "block";
+        }
+      }
+      function handleControl(eventKey){
+        if (eventKey === "ArrowLeft") {
+          catX -= 10;
+        } else if (eventKey === "ArrowRight") {
+          catX += 10;
+        } else if (eventKey === " ") {
+          notes = ["E4"];
+          playEffect();
+          setInterval(playMelody, notes.length * noteLength * 1000);
+          lasers.push({
+            x: catX,
+            y: 360,
+            speed: 5,
+          });
+        }
+      }
+
+      document.addEventListener("keydown", (event) => {
+        handleControl(event.key)
+      });
+
+      const arrowLeft = document.getElementById("arrowLeft");
+      arrowLeft.addEventListener("click", function () {
+        handleControl("ArrowLeft");
+      });
+      const arrowRight = document.getElementById("arrowRight");
+      arrowRight.addEventListener("click", function () {
+        handleControl("ArrowRight");
+      });
+      const shoot = document.getElementById("shoot");
+      shoot.addEventListener("click", function () {
+        handleControl(" ");
+      });
+    </script>
+  </body>
+</html>
