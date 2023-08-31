@@ -13,7 +13,8 @@
       }
       #gameCanvas {
         border: 1px solid white;
-        width:90vw;;
+        width:90vw;
+        max-height: 600px;
       }
       .button {
         background-color: white;
@@ -74,8 +75,8 @@
     <div id="mainPage" style="display: none">
       <h2>Main Page</h2>
       <p>
-        Use the left and right arrow keys to move the cat. Press the spacebar to
-        shoot fishbones.
+        Use the left / right arrow keys. Press the spacebar to
+        shoot fishbones. Pick Star for immunity!
       </p>
       <span>Score: </span><span id="score">0</span><br />
       <canvas id="gameCanvas" width="600" height="400"></canvas><br />
@@ -106,6 +107,7 @@
     
       const audioContext = new AudioContext();
       const gainNode = audioContext.createGain();
+      gainNode.gain.value = 0.025;
       gainNode.connect(audioContext.destination);
 
       let notes = [
@@ -147,6 +149,8 @@
       function playEffect() {
         window.AudioContext = window.AudioContext || window.webkitAudioContext;
         var ctx = new AudioContext();
+        const gainNd = ctx.createGain();
+        gainNd.gain.value = 0.025;
         var o = ctx.createOscillator();
         o.type = "square";
         o.frequency.value = 161.63;
